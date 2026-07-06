@@ -1,0 +1,1135 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>快遞分揀王 Demo</title>
+  <style>
+    :root {
+      --ink: #233047;
+      --line: #1f2d43;
+      --good: #75d845;
+      --good-dark: #259645;
+      --bad: #f25552;
+      --bad-dark: #b82f3b;
+      --belt: #3f4d5f;
+      --belt-edge: #b7d2e9;
+      --ui-blue: #27b8f2;
+      --gold: #ffbc22;
+      font-family: "Arial Rounded MT Bold", "Microsoft JhengHei", system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 22% 10%, #c8f3ff 0 12%, transparent 30%),
+        linear-gradient(135deg, #8fd6f0, #b9e2d1 42%, #ffe08c);
+    }
+
+    .phone {
+      position: relative;
+      width: min(100vw, 470px);
+      height: min(100vh, 820px);
+      min-height: 640px;
+      overflow: hidden;
+      border: 4px solid #192032;
+      border-radius: 26px;
+      background: #93abc0;
+      box-shadow: 0 24px 70px rgba(20, 26, 38, .36);
+    }
+
+    .warehouse {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.16) 0 1px, transparent 1px 100%) 0 0 / 58px 100%,
+        linear-gradient(#bcd5e6, #879aae 62%, #67758a);
+    }
+
+    .back-door {
+      position: absolute;
+      left: 34%;
+      top: 10%;
+      width: 32%;
+      height: 22%;
+      border: 5px solid #6a8398;
+      border-bottom: 0;
+      background:
+        repeating-linear-gradient(0deg, #d5e8f4 0 12px, #aac4d7 12px 16px);
+      opacity: .75;
+    }
+
+    .shelf {
+      position: absolute;
+      top: 7%;
+      width: 24%;
+      height: 50%;
+      border: 4px solid #4d677d;
+      background:
+        linear-gradient(90deg, #4d677d 0 7px, transparent 7px calc(100% - 7px), #4d677d calc(100% - 7px)),
+        repeating-linear-gradient(0deg, transparent 0 72px, #4d677d 72px 80px);
+      opacity: .95;
+    }
+
+    .shelf.left { left: -2%; transform: perspective(260px) rotateY(13deg); }
+    .shelf.right { right: -2%; transform: perspective(260px) rotateY(-13deg); }
+
+    .mini-box {
+      position: absolute;
+      width: 42px;
+      height: 34px;
+      border: 2px solid #8b5c2c;
+      background: #d99b55;
+      box-shadow: inset 0 8px #efc07b;
+    }
+
+    .shelf.left .mini-box:nth-child(1) { left: 10px; top: 28px; }
+    .shelf.left .mini-box:nth-child(2) { right: 12px; top: 112px; }
+    .shelf.left .mini-box:nth-child(3) { left: 24px; top: 222px; }
+    .shelf.right .mini-box:nth-child(1) { right: 18px; top: 34px; }
+    .shelf.right .mini-box:nth-child(2) { left: 12px; top: 142px; background: #7ed05f; }
+    .shelf.right .mini-box:nth-child(3) { right: 32px; top: 256px; }
+
+    .belt {
+      position: absolute;
+      left: 17%;
+      right: 17%;
+      top: 22%;
+      bottom: -10%;
+      clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+      overflow: hidden;
+      background:
+        repeating-linear-gradient(0deg, rgba(30,39,52,.55) 0 5px, transparent 5px 58px),
+        linear-gradient(90deg, #242d3a, var(--belt) 30%, #5b697b 50%, var(--belt) 70%, #242d3a);
+      border-left: 7px solid var(--belt-edge);
+      border-right: 7px solid var(--belt-edge);
+    }
+
+    .belt::before,
+    .belt::after {
+      content: "";
+      position: absolute;
+      top: -10%;
+      width: 6px;
+      height: 120%;
+      background: rgba(21, 28, 42, .42);
+    }
+
+    .belt::before { left: 29%; }
+    .belt::after { right: 29%; }
+
+    .belt-lines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0 58px, rgba(180, 207, 226, .28) 58px 63px);
+      animation: beltMove .72s linear infinite;
+    }
+
+    @keyframes beltMove {
+      to { transform: translateY(63px); }
+    }
+
+    .hud {
+      position: absolute;
+      z-index: 20;
+      top: 7px;
+      left: 50%;
+      width: min(80%, 360px);
+      transform: translateX(-50%);
+      display: grid;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .score {
+      min-height: 84px;
+      display: grid;
+      place-items: center;
+      border: 5px solid #0e6e38;
+      border-radius: 0 0 20px 20px;
+      color: #fff;
+      font-size: clamp(28px, 7vw, 46px);
+      text-shadow: 0 4px 0 #166436, 0 0 8px rgba(255,255,255,.4);
+      background: linear-gradient(#bcff48, #4ecf3f 70%, #1e8e48);
+      box-shadow: 0 9px 0 rgba(13, 71, 45, .6);
+      letter-spacing: 0;
+    }
+
+    .meter-label {
+      color: #e7f7ff;
+      font-size: 24px;
+      font-weight: 900;
+      text-shadow: 0 3px 0 #246c99;
+      line-height: 1;
+    }
+
+    .bar {
+      height: 35px;
+      padding: 5px;
+      border: 4px solid #e3f9ff;
+      border-radius: 20px;
+      background: #144b72;
+      box-shadow: inset 0 0 0 2px #1e78a4, 0 3px 0 rgba(22,38,55,.42);
+    }
+
+    .fill {
+      height: 100%;
+      width: 100%;
+      border-radius: inherit;
+      transform-origin: left center;
+      transition: transform .18s ease;
+      background: linear-gradient(90deg, #31e5ff, #26aef0 70%, #88f7ff);
+    }
+
+    .fever-row {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      align-items: end;
+      gap: 5px;
+      margin-top: -2px;
+    }
+
+    .flame {
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      border: 4px solid #c72e20;
+      border-radius: 50%;
+      color: #ffcc3d;
+      background: #ff5a1e;
+      font-size: 34px;
+      box-shadow: 0 5px 0 rgba(117, 36, 21, .42);
+    }
+
+    .fever-wrap .meter-label {
+      color: #ffb744;
+      text-shadow: 0 3px 0 #8d3b18;
+      margin-bottom: 3px;
+    }
+
+    .fever-bar {
+      border-color: #fff1b6;
+      background: #8c3516;
+      box-shadow: inset 0 0 0 2px #d96616, 0 3px 0 rgba(72,35,16,.38);
+    }
+
+    .fever-bar .fill {
+      transform: scaleX(0);
+      background: repeating-linear-gradient(135deg, #ffe45b 0 12px, #ff8b18 12px 22px);
+      box-shadow: 0 0 16px rgba(255, 196, 48, .9);
+    }
+
+    .character {
+      position: absolute;
+      z-index: 14;
+      left: 3%;
+      bottom: 23%;
+      width: 124px;
+      height: 190px;
+      transform-origin: bottom center;
+      transition: transform .16s ease;
+    }
+
+    .cap {
+      position: absolute;
+      left: 28px;
+      top: 6px;
+      width: 72px;
+      height: 45px;
+      border: 4px solid #194c77;
+      border-radius: 42px 42px 16px 16px;
+      background: #39a7ee;
+      z-index: 5;
+    }
+
+    .cap::after {
+      content: "";
+      position: absolute;
+      right: -18px;
+      bottom: 1px;
+      width: 38px;
+      height: 18px;
+      border: 4px solid #194c77;
+      border-left: 0;
+      border-radius: 0 25px 25px 0;
+      background: #47bbff;
+    }
+
+    .head {
+      position: absolute;
+      left: 22px;
+      top: 34px;
+      width: 82px;
+      height: 78px;
+      border: 4px solid #4f2a24;
+      border-radius: 38px 38px 34px 34px;
+      background: #ffd0aa;
+      overflow: hidden;
+      z-index: 4;
+    }
+
+    .hair {
+      position: absolute;
+      inset: -4px 8px auto -8px;
+      height: 31px;
+      border-radius: 0 0 40px 20px;
+      background: #5b2b26;
+    }
+
+    .eye {
+      position: absolute;
+      top: 37px;
+      width: 9px;
+      height: 15px;
+      border-radius: 50%;
+      background: #3b2725;
+    }
+
+    .eye.left { left: 24px; }
+    .eye.right { right: 24px; }
+
+    .mouth {
+      position: absolute;
+      left: 31px;
+      top: 55px;
+      width: 22px;
+      height: 14px;
+      border-radius: 0 0 24px 24px;
+      background: #9a2732;
+      border-bottom: 3px solid #692129;
+    }
+
+    .body {
+      position: absolute;
+      left: 34px;
+      top: 106px;
+      width: 60px;
+      height: 64px;
+      border: 4px solid #214c74;
+      border-radius: 15px 15px 10px 10px;
+      background: #42adf0;
+    }
+
+    .arm, .leg {
+      position: absolute;
+      border: 4px solid #4f2a24;
+      background: #ffd0aa;
+    }
+
+    .arm {
+      top: 112px;
+      width: 28px;
+      height: 52px;
+      border-radius: 18px;
+      transform-origin: top center;
+    }
+
+    .arm.left { left: 18px; transform: rotate(28deg); }
+    .arm.right { right: 18px; transform: rotate(-28deg); }
+
+    .leg {
+      top: 163px;
+      width: 24px;
+      height: 31px;
+      border-radius: 12px;
+      background: #305377;
+    }
+
+    .leg.left { left: 43px; }
+    .leg.right { right: 31px; }
+
+    .character.success { transform: translateY(-8px) rotate(-3deg); }
+    .character.success .arm.left { transform: rotate(145deg); }
+    .character.success .arm.right { transform: rotate(-145deg); }
+    .character.fail { transform: rotate(4deg); }
+    .character.fail .mouth {
+      top: 60px;
+      height: 10px;
+      border: 4px solid #692129;
+      border-bottom: 0;
+      border-radius: 20px 20px 0 0;
+      background: transparent;
+    }
+    .character.fever {
+      animation: cheer .35s ease-in-out infinite alternate;
+      filter: drop-shadow(0 0 12px #ffd33c);
+    }
+
+    @keyframes cheer {
+      to { transform: translateY(-11px) rotate(3deg); }
+    }
+
+    .cargo-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 13;
+      pointer-events: none;
+    }
+
+    .cargo {
+      position: absolute;
+      left: 50%;
+      top: 20%;
+      width: 110px;
+      height: 90px;
+      transform-origin: center bottom;
+      transition: top .2s linear, transform .2s linear, opacity .15s ease;
+      filter: drop-shadow(0 9px 0 rgba(28,35,45,.22));
+    }
+
+    .box-front {
+      position: absolute;
+      inset: 16px 8px 0 8px;
+      border: 4px solid #3d5532;
+      background: var(--good);
+      box-shadow: inset 0 12px rgba(255,255,255,.25);
+    }
+
+    .box-top {
+      position: absolute;
+      left: 17px;
+      right: 17px;
+      top: 0;
+      height: 34px;
+      border: 4px solid #3d5532;
+      transform: skewX(-18deg);
+      background: #a7ed6e;
+    }
+
+    .tape-v, .tape-h {
+      position: absolute;
+      background: #f3cc82;
+      border: 2px solid rgba(120,85,42,.38);
+    }
+
+    .tape-v { left: 50%; top: 2px; width: 18px; height: 76px; transform: translateX(-50%); }
+    .tape-h { left: 10px; top: 34px; width: 82%; height: 16px; }
+
+    .label {
+      position: absolute;
+      right: 17px;
+      bottom: 13px;
+      width: 29px;
+      height: 20px;
+      border: 2px solid #8e7a58;
+      background: #fff8df;
+    }
+
+    .bad .box-front,
+    .bad .box-top {
+      border-color: #74303b;
+      background: var(--bad);
+    }
+
+    .bad .box-top { background: #ff8176; }
+
+    .bad .box-front::before,
+    .bad .box-front::after {
+      content: "";
+      position: absolute;
+      top: 25px;
+      width: 14px;
+      height: 5px;
+      border-radius: 4px;
+      background: #7d2331;
+    }
+
+    .bad .box-front::before { left: 26px; transform: rotate(30deg); }
+    .bad .box-front::after { right: 26px; transform: rotate(-30deg); }
+
+    .bad .label {
+      left: 38px;
+      right: auto;
+      bottom: 12px;
+      width: 32px;
+      height: 13px;
+      border: 0;
+      border-top: 5px solid #7d2331;
+      border-radius: 50%;
+      background: transparent;
+    }
+
+    .crack {
+      position: absolute;
+      width: 30px;
+      height: 34px;
+      right: 9px;
+      top: 23px;
+      clip-path: polygon(52% 0, 40% 36%, 60% 36%, 42% 100%, 70% 47%, 52% 47%, 67% 0);
+      background: rgba(99, 26, 37, .55);
+    }
+
+    .phone.fever-mode .cargo {
+      filter: drop-shadow(0 0 16px rgba(211, 91, 255, .95)) drop-shadow(0 10px 0 rgba(28,35,45,.18));
+    }
+
+    .phone.fever-mode .cargo .box-front,
+    .phone.fever-mode .cargo .box-top {
+      border-color: #3b1e67;
+      background: linear-gradient(135deg, #d96dff, #7b42ff 60%, #4f2cc7);
+      box-shadow: inset 0 14px rgba(255,255,255,.28), 0 0 20px rgba(192,83,255,.45);
+    }
+
+    .phone.fever-mode .cargo .box-top {
+      background: linear-gradient(135deg, #f0a6ff, #9b6bff);
+    }
+
+    .phone.fever-mode .cargo .tape-v,
+    .phone.fever-mode .cargo .tape-h {
+      background: #fff16a;
+      border-color: rgba(79, 42, 133, .5);
+    }
+
+    .controls {
+      position: absolute;
+      z-index: 30;
+      left: 4%;
+      right: 4%;
+      bottom: 4%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8%;
+    }
+
+    button {
+      height: clamp(102px, 17vh, 146px);
+      border: 5px solid rgba(54, 36, 34, .45);
+      border-radius: 20px;
+      color: #fff;
+      font-size: clamp(64px, 17vw, 104px);
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+      text-shadow: 0 5px 0 rgba(0,0,0,.28);
+      box-shadow: inset 0 12px rgba(255,255,255,.24), inset 0 -15px rgba(0,0,0,.14), 0 9px 0 rgba(32,38,48,.35);
+      transition: transform .08s ease, filter .08s ease;
+    }
+
+    button:active,
+    button.pressed {
+      transform: translateY(7px) scale(.96);
+      box-shadow: inset 0 8px rgba(255,255,255,.2), inset 0 -10px rgba(0,0,0,.14), 0 3px 0 rgba(32,38,48,.36);
+    }
+
+    .yes { background: linear-gradient(#bfff46, #49ca33 68%, var(--good-dark)); }
+    .no { background: linear-gradient(#ff8885, #f0474c 68%, var(--bad-dark)); }
+
+    .tune-toggle {
+      position: absolute;
+      z-index: 70;
+      right: 12px;
+      top: 12px;
+      width: 54px;
+      height: 54px;
+      border-radius: 17px;
+      font-size: 28px;
+      background: linear-gradient(#fff, #c8f1ff);
+      color: #29415f;
+      text-shadow: none;
+      box-shadow: inset 0 6px rgba(255,255,255,.55), inset 0 -8px rgba(0,0,0,.08), 0 5px 0 rgba(32,38,48,.28);
+    }
+
+    .tune-panel {
+      position: absolute;
+      z-index: 69;
+      top: 74px;
+      right: 12px;
+      width: min(310px, calc(100% - 24px));
+      padding: 14px;
+      border: 4px solid rgba(255,255,255,.82);
+      border-radius: 18px;
+      background: linear-gradient(#f9fdff, #d7eefb);
+      box-shadow: 0 12px 0 rgba(38, 57, 78, .28);
+      transform: translateY(-8px) scale(.97);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .14s ease, transform .14s ease;
+    }
+
+    .tune-panel.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    .tune-panel h2 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      color: #253754;
+    }
+
+    .tune-row {
+      display: grid;
+      grid-template-columns: 1fr 54px;
+      gap: 10px;
+      align-items: center;
+      margin-top: 9px;
+      font-size: 15px;
+      font-weight: 900;
+      color: #34455f;
+    }
+
+    .tune-row input {
+      grid-column: 1 / -1;
+      width: 100%;
+      accent-color: #7b42ff;
+    }
+
+    .tune-value {
+      justify-self: end;
+      min-width: 42px;
+      padding: 4px 8px;
+      border-radius: 10px;
+      color: #fff;
+      text-align: center;
+      background: #5d43c5;
+    }
+
+    .phone.fever-mode button {
+      border-color: #fff16a;
+      filter: saturate(1.25) drop-shadow(0 0 13px rgba(212, 84, 255, .75));
+      animation: buttonFever .42s ease-in-out infinite alternate;
+    }
+
+    @keyframes buttonFever {
+      to { transform: translateY(-3px) scale(1.02); }
+    }
+
+    .feedback {
+      position: absolute;
+      z-index: 50;
+      left: 50%;
+      top: 48%;
+      transform: translate(-50%, -50%);
+      font-size: 64px;
+      font-weight: 900;
+      opacity: 0;
+      pointer-events: none;
+      text-shadow: 0 5px 0 rgba(0,0,0,.18), 0 0 15px rgba(255,255,255,.8);
+    }
+
+    .feedback.show {
+      animation: pop .46s ease-out;
+    }
+
+    @keyframes pop {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(.5); }
+      20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+      100% { opacity: 0; transform: translate(-50%, -90%) scale(.95); }
+    }
+
+    .fever-badge {
+      position: absolute;
+      z-index: 44;
+      left: 50%;
+      top: 30%;
+      min-width: 230px;
+      padding: 10px 22px;
+      border: 4px solid #fff16a;
+      border-radius: 18px;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 900;
+      text-align: center;
+      text-shadow: 0 4px 0 #4d238a, 0 0 16px rgba(255,255,255,.8);
+      background: linear-gradient(90deg, #ff4fd8, #7847ff 55%, #36d6ff);
+      box-shadow: 0 8px 0 rgba(54, 25, 111, .5), 0 0 28px rgba(191, 72, 255, .9);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -12px) scale(.92);
+      transition: opacity .16s ease, transform .16s ease;
+    }
+
+    .phone.fever-mode .fever-badge {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+      animation: feverBadge .44s ease-in-out infinite alternate;
+    }
+
+    @keyframes feverBadge {
+      to { box-shadow: 0 8px 0 rgba(54, 25, 111, .5), 0 0 42px rgba(255, 228, 76, .95); }
+    }
+
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 45;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      animation: burst .55s ease-out forwards;
+    }
+
+    @keyframes burst {
+      to {
+        opacity: 0;
+        transform: translate(var(--x), var(--y)) scale(.2);
+      }
+    }
+
+    .overlay {
+      position: absolute;
+      z-index: 60;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      text-align: center;
+      color: #fff;
+      background: rgba(19, 27, 42, .55);
+      backdrop-filter: blur(3px);
+    }
+
+    .panel {
+      width: min(100%, 360px);
+      padding: 24px 22px;
+      border: 4px solid rgba(255,255,255,.8);
+      border-radius: 18px;
+      background: linear-gradient(#43b8f4, #2878cf);
+      box-shadow: 0 16px 0 rgba(13, 47, 91, .42);
+    }
+
+    .panel h1 {
+      margin: 0 0 12px;
+      font-size: 34px;
+      letter-spacing: 0;
+      text-shadow: 0 4px 0 rgba(0,0,0,.22);
+    }
+
+    .panel p {
+      margin: 8px 0 18px;
+      font-size: 17px;
+      line-height: 1.55;
+      font-weight: 800;
+    }
+
+    .start {
+      width: 100%;
+      height: 74px;
+      font-size: 30px;
+      border-radius: 16px;
+      background: linear-gradient(#fff15b, #ff9f1f);
+    }
+
+    .hidden { display: none; }
+
+    .fever-mode .phone,
+    .phone.fever-mode {
+      animation: feverPulse .28s ease-in-out infinite alternate;
+    }
+
+    .phone.fever-mode .warehouse {
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.16) 0 1px, transparent 1px 100%) 0 0 / 58px 100%,
+        linear-gradient(#cab9ef, #8c83bd 58%, #6e5b91);
+    }
+
+    .phone.fever-mode .belt {
+      background:
+        repeating-linear-gradient(0deg, rgba(248,220,80,.38) 0 5px, transparent 5px 58px),
+        linear-gradient(90deg, #2e2450, #5947a3 30%, #a152ff 50%, #5947a3 70%, #2e2450);
+      border-left-color: #f1e36b;
+      border-right-color: #f1e36b;
+    }
+
+    @keyframes feverPulse {
+      to { filter: saturate(1.35) brightness(1.08); }
+    }
+
+    @media (max-height: 700px) {
+      .score { min-height: 66px; font-size: 30px; }
+      .meter-label { font-size: 18px; }
+      .bar { height: 28px; }
+      .flame { width: 48px; height: 48px; font-size: 28px; }
+      .character { width: 102px; transform: scale(.86); left: 1%; bottom: 21%; }
+      .controls { bottom: 3%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone" id="game">
+    <section class="warehouse" aria-hidden="true">
+      <div class="back-door"></div>
+      <div class="shelf left"><i class="mini-box"></i><i class="mini-box"></i><i class="mini-box"></i></div>
+      <div class="shelf right"><i class="mini-box"></i><i class="mini-box"></i><i class="mini-box"></i></div>
+      <div class="belt"><div class="belt-lines"></div></div>
+    </section>
+
+    <section class="hud" aria-label="遊戲狀態">
+      <div class="score" id="score">SCORE: 0</div>
+      <div>
+        <div class="meter-label">TIME</div>
+        <div class="bar"><div class="fill" id="timeFill"></div></div>
+      </div>
+      <div class="fever-row">
+        <div class="flame">火</div>
+        <div class="fever-wrap">
+          <div class="meter-label">FEVER</div>
+          <div class="bar fever-bar"><div class="fill" id="feverFill"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="character" id="character" aria-hidden="true">
+      <div class="arm left"></div>
+      <div class="arm right"></div>
+      <div class="leg left"></div>
+      <div class="leg right"></div>
+      <div class="body"></div>
+      <div class="head">
+        <div class="hair"></div>
+        <div class="eye left"></div>
+        <div class="eye right"></div>
+        <div class="mouth"></div>
+      </div>
+      <div class="cap"></div>
+    </div>
+
+    <section class="cargo-layer" id="cargoLayer" aria-label="輸送帶貨物"></section>
+    <div class="fever-badge" id="feverBadge">FEVER TIME</div>
+    <div class="particles" id="particles"></div>
+    <div class="feedback" id="feedback"></div>
+
+    <section class="controls" aria-label="分揀操作">
+      <button class="yes" id="yesBtn" aria-label="好貨">✓</button>
+      <button class="no" id="noBtn" aria-label="壞貨">×</button>
+    </section>
+
+    <button class="tune-toggle" id="tuneToggle" aria-label="調整參數">⚙</button>
+    <section class="tune-panel" id="tunePanel" aria-label="調整參數">
+      <h2>調整參數</h2>
+      <label class="tune-row">
+        <span>Fever 需要正確次數</span>
+        <span class="tune-value" id="feverNeedValue">12</span>
+        <input id="feverNeedInput" type="range" min="6" max="24" step="1" value="12">
+      </label>
+      <label class="tune-row">
+        <span>每次正確累積</span>
+        <span class="tune-value" id="feverGainValue">1</span>
+        <input id="feverGainInput" type="range" min="1" max="4" step="1" value="1">
+      </label>
+      <label class="tune-row">
+        <span>Fever 持續秒數</span>
+        <span class="tune-value" id="feverDurationValue">7</span>
+        <input id="feverDurationInput" type="range" min="3" max="12" step="1" value="7">
+      </label>
+      <label class="tune-row">
+        <span>錯誤扣除秒數</span>
+        <span class="tune-value" id="mistakePenaltyValue">3</span>
+        <input id="mistakePenaltyInput" type="range" min="1" max="8" step="1" value="3">
+      </label>
+    </section>
+
+    <section class="overlay" id="overlay">
+      <div class="panel">
+        <h1>快遞分揀王</h1>
+        <p id="overlayText">綠色完整貨物按勾，紅色破損貨物按叉。連續正確集滿 Fever，狂熱時左右都算正確。</p>
+        <button class="start" id="startBtn">開始分揀</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const game = document.getElementById("game");
+    const cargoLayer = document.getElementById("cargoLayer");
+    const particles = document.getElementById("particles");
+    const scoreEl = document.getElementById("score");
+    const timeFill = document.getElementById("timeFill");
+    const feverFill = document.getElementById("feverFill");
+    const feverBadge = document.getElementById("feverBadge");
+    const feedback = document.getElementById("feedback");
+    const character = document.getElementById("character");
+    const overlay = document.getElementById("overlay");
+    const overlayText = document.getElementById("overlayText");
+    const startBtn = document.getElementById("startBtn");
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const tuneToggle = document.getElementById("tuneToggle");
+    const tunePanel = document.getElementById("tunePanel");
+    const feverNeedInput = document.getElementById("feverNeedInput");
+    const feverGainInput = document.getElementById("feverGainInput");
+    const feverDurationInput = document.getElementById("feverDurationInput");
+    const mistakePenaltyInput = document.getElementById("mistakePenaltyInput");
+    const feverNeedValue = document.getElementById("feverNeedValue");
+    const feverGainValue = document.getElementById("feverGainValue");
+    const feverDurationValue = document.getElementById("feverDurationValue");
+    const mistakePenaltyValue = document.getElementById("mistakePenaltyValue");
+
+    const config = {
+      totalTime: 45,
+      feverNeed: 12,
+      feverGain: 1,
+      feverDuration: 7,
+      feverScore: 300,
+      normalScore: 100,
+      mistakePenalty: 3,
+      feverMistakePenalty: 2
+    };
+    const track = [
+      { top: 28, scale: .34, z: 1 },
+      { top: 36, scale: .48, z: 2 },
+      { top: 47, scale: .68, z: 3 },
+      { top: 61, scale: .95, z: 4 },
+      { top: 72, scale: 1.42, z: 5 }
+    ];
+
+    let score = 0;
+    let timeLeft = config.totalTime;
+    let fever = 0;
+    let feverTime = 0;
+    let queue = [];
+    let running = false;
+    let lastTick = 0;
+    let audioCtx;
+
+    function cargoTemplate(item) {
+      const variant = item.variant % 3;
+      const tape = variant === 0
+        ? '<i class="tape-v"></i><i class="tape-h"></i>'
+        : variant === 1
+          ? '<i class="tape-v" style="left:38%"></i><i class="tape-h" style="top:25px"></i>'
+          : '<i class="tape-h" style="top:19px"></i><i class="tape-v" style="left:62%"></i>';
+
+      return `
+        <div class="box-top"></div>
+        <div class="box-front">
+          ${tape}
+          ${item.type === "bad" ? '<i class="crack"></i>' : '<i class="label"></i>'}
+        </div>`;
+    }
+
+    function makeCargo() {
+      const type = Math.random() < .54 ? "good" : "bad";
+      return {
+        id: crypto.randomUUID(),
+        type,
+        variant: Math.floor(Math.random() * 3)
+      };
+    }
+
+    function reset() {
+      score = 0;
+      timeLeft = config.totalTime;
+      fever = 0;
+      feverTime = 0;
+      queue = Array.from({ length: 5 }, makeCargo);
+      running = true;
+      lastTick = performance.now();
+      overlay.classList.add("hidden");
+      updateHud();
+      renderCargo();
+      requestAnimationFrame(loop);
+    }
+
+    function renderCargo() {
+      cargoLayer.innerHTML = "";
+      queue.forEach((item, index) => {
+        const pos = track[index];
+        const el = document.createElement("div");
+        el.className = `cargo ${item.type === "bad" ? "bad" : "good"}`;
+        el.style.top = `${pos.top}%`;
+        el.style.zIndex = pos.z;
+        el.style.transform = `translateX(-50%) scale(${pos.scale})`;
+        el.innerHTML = cargoTemplate(item);
+        cargoLayer.appendChild(el);
+      });
+    }
+
+    function updateHud() {
+      scoreEl.textContent = `SCORE: ${score}`;
+      timeFill.style.transform = `scaleX(${Math.max(0, timeLeft / config.totalTime)})`;
+      feverFill.style.transform = `scaleX(${Math.max(0, Math.min(1, fever / config.feverNeed))})`;
+      game.classList.toggle("fever-mode", feverTime > 0);
+      character.classList.toggle("fever", feverTime > 0);
+      feverBadge.textContent = feverTime > 0 ? `FEVER TIME ${Math.ceil(feverTime)}` : "FEVER TIME";
+    }
+
+    function loop(now) {
+      if (!running) return;
+      const delta = Math.min(.08, (now - lastTick) / 1000);
+      lastTick = now;
+      timeLeft -= delta;
+      if (feverTime > 0) {
+        feverTime -= delta;
+        if (feverTime <= 0) {
+          feverTime = 0;
+          fever = 0;
+          setCharacter("");
+        }
+      }
+      updateHud();
+      if (timeLeft <= 0) {
+        endGame();
+        return;
+      }
+      requestAnimationFrame(loop);
+    }
+
+    function sortCargo(answer, button) {
+      if (!running || queue.length === 0) return;
+      press(button);
+      const target = queue[queue.length - 1];
+      const isFever = feverTime > 0;
+      const correct = isFever || target.type === answer;
+
+      if (correct) {
+        const gain = isFever ? config.feverScore : config.normalScore;
+        score += gain;
+        if (!isFever) fever += config.feverGain;
+        if (fever >= config.feverNeed && feverTime <= 0) {
+          feverTime = config.feverDuration;
+          fever = config.feverNeed;
+          showFeedback("FEVER TIME!", "#d75bff");
+          burst("#d75bff", "#fff16a");
+          tone(660, .12, "sawtooth");
+        } else {
+          showFeedback(isFever ? `PURPLE +${gain}` : `+${gain}`, isFever ? "#d75bff" : "#6aff46");
+          tone(520, .08, "triangle");
+        }
+        setCharacter("success");
+        burst(isFever ? "#d75bff" : "#fff06b", isFever ? "#36d6ff" : "#49d93b");
+      } else {
+        timeLeft = Math.max(0, timeLeft - config.mistakePenalty);
+        fever = Math.max(0, fever - config.feverMistakePenalty);
+        showFeedback("-TIME", "#ff4f57");
+        setCharacter("fail");
+        shake();
+        burst("#ff6262", "#ffffff");
+        tone(150, .13, "square");
+      }
+
+      if (correct) {
+        queue.pop();
+        queue.unshift(makeCargo());
+        renderCargo();
+      }
+      updateHud();
+    }
+
+    function setCharacter(state) {
+      character.classList.remove("success", "fail");
+      if (state) character.classList.add(state);
+      window.clearTimeout(setCharacter.timer);
+      setCharacter.timer = window.setTimeout(() => {
+        character.classList.remove("success", "fail");
+      }, 380);
+    }
+
+    function showFeedback(text, color) {
+      feedback.textContent = text;
+      feedback.style.color = color;
+      feedback.classList.remove("show");
+      void feedback.offsetWidth;
+      feedback.classList.add("show");
+    }
+
+    function burst(a, b) {
+      const rect = game.getBoundingClientRect();
+      const originX = rect.width / 2;
+      const originY = rect.height * .6;
+      for (let i = 0; i < 18; i += 1) {
+        const p = document.createElement("i");
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 42 + Math.random() * 75;
+        p.className = "particle";
+        p.style.left = `${originX}px`;
+        p.style.top = `${originY}px`;
+        p.style.background = i % 2 ? a : b;
+        p.style.setProperty("--x", `${Math.cos(angle) * distance}px`);
+        p.style.setProperty("--y", `${Math.sin(angle) * distance}px`);
+        particles.appendChild(p);
+        p.addEventListener("animationend", () => p.remove(), { once: true });
+      }
+    }
+
+    function shake() {
+      game.animate([
+        { transform: "translateX(0)" },
+        { transform: "translateX(-9px)" },
+        { transform: "translateX(8px)" },
+        { transform: "translateX(0)" }
+      ], { duration: 180, easing: "ease-out" });
+    }
+
+    function press(button) {
+      button.classList.add("pressed");
+      window.setTimeout(() => button.classList.remove("pressed"), 120);
+    }
+
+    function tone(freq, duration, type) {
+      try {
+        audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(.09, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (_) {}
+    }
+
+    function endGame() {
+      running = false;
+      timeLeft = 0;
+      updateHud();
+      overlayText.textContent = `分揀完成！你的分數是 ${score}。再挑戰一次，把 Fever 接得更順。`;
+      startBtn.textContent = "再玩一次";
+      overlay.classList.remove("hidden");
+    }
+
+    function syncTuning() {
+      config.feverNeed = Number(feverNeedInput.value);
+      config.feverGain = Number(feverGainInput.value);
+      config.feverDuration = Number(feverDurationInput.value);
+      config.mistakePenalty = Number(mistakePenaltyInput.value);
+      fever = Math.min(fever, config.feverNeed);
+      feverNeedValue.textContent = config.feverNeed;
+      feverGainValue.textContent = config.feverGain;
+      feverDurationValue.textContent = config.feverDuration;
+      mistakePenaltyValue.textContent = config.mistakePenalty;
+      updateHud();
+    }
+
+    startBtn.addEventListener("click", reset);
+    yesBtn.addEventListener("click", () => sortCargo("good", yesBtn));
+    noBtn.addEventListener("click", () => sortCargo("bad", noBtn));
+    tuneToggle.addEventListener("click", () => tunePanel.classList.toggle("open"));
+    feverNeedInput.addEventListener("input", syncTuning);
+    feverGainInput.addEventListener("input", syncTuning);
+    feverDurationInput.addEventListener("input", syncTuning);
+    mistakePenaltyInput.addEventListener("input", syncTuning);
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") sortCargo("good", yesBtn);
+      if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") sortCargo("bad", noBtn);
+      if (event.key === "Enter" && !running) reset();
+    });
+
+    queue = Array.from({ length: 5 }, makeCargo);
+    syncTuning();
+    renderCargo();
+    updateHud();
+  </script>
+</body>
+</html>
