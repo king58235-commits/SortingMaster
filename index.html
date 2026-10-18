@@ -762,55 +762,492 @@
       .character { width: 102px; transform: scale(.86); left: 1%; bottom: 21%; }
       .controls { bottom: 3%; }
     }
+
+    /* V2 asset presentation: gameplay logic remains below; this layer only maps it to reviewed assets. */
+    :root {
+      --ink: #17304f;
+      --line: #2d4a6b;
+      --good: #3caf61;
+      --bad: #db5a56;
+      --cream: #fffaf0;
+      --panel: #f7fbff;
+    }
+
+    body {
+      min-width: 320px;
+      overflow: auto;
+      padding: 18px;
+      background: #dcecf5;
+    }
+
+    .phone {
+      width: min(100%, 1040px);
+      height: min(calc(100vh - 36px), 820px);
+      min-height: 620px;
+      border: 4px solid #244867;
+      border-radius: 20px;
+      background: #c5e1ed;
+      box-shadow: 0 14px 32px rgba(23, 48, 79, .2);
+    }
+
+    .warehouse,
+    .warehouse-scene {
+      position: absolute;
+      inset: 0;
+    }
+
+    .warehouse {
+      overflow: hidden;
+      background: #c5e1ed;
+    }
+
+    .warehouse-scene {
+      background: center / cover no-repeat url("assets/background/warehouse-main.png");
+    }
+
+    .back-door,
+    .shelf,
+    .mini-box {
+      display: none;
+    }
+
+    .belt {
+      left: 40%;
+      right: 40%;
+      top: 17%;
+      bottom: 11%;
+      clip-path: none;
+      overflow: visible;
+      border: 0;
+      background: transparent;
+    }
+
+    .belt::before,
+    .belt::after,
+    .belt-lines {
+      display: none;
+    }
+
+    .hud {
+      z-index: 20;
+      top: 14px;
+      left: 50%;
+      width: min(74%, 760px);
+      transform: translateX(-50%);
+      grid-template-columns: 1fr 1.15fr 1.2fr;
+      align-items: stretch;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .meter-card,
+    .score {
+      min-height: 78px;
+      display: grid;
+      align-content: center;
+      gap: 4px;
+      padding: 10px 16px;
+      border: 3px solid #395a7d;
+      border-radius: 14px;
+      color: var(--ink);
+      background: rgba(255, 250, 240, .96);
+      box-shadow: 0 4px 0 rgba(45, 74, 107, .22);
+    }
+
+    .score {
+      border-radius: 14px;
+      background: rgba(255, 250, 240, .96);
+      box-shadow: 0 4px 0 rgba(45, 74, 107, .22);
+      letter-spacing: .04em;
+    }
+
+    .score strong,
+    .meter-heading strong {
+      color: #17304f;
+      font-size: clamp(25px, 3.2vw, 38px);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      text-shadow: none;
+    }
+
+    .meter-label {
+      color: #496684;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      line-height: 1;
+      text-shadow: none;
+    }
+
+    .meter-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .bar {
+      height: 14px;
+      padding: 2px;
+      border: 2px solid #526f8d;
+      border-radius: 999px;
+      background: #d5e2eb;
+      box-shadow: none;
+    }
+
+    .fill {
+      background: #36a9da;
+    }
+
+    .fever-row {
+      grid-template-columns: 50px 1fr;
+      align-items: center;
+      margin: 0;
+    }
+
+    .hud-flame {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .fever-wrap .meter-label {
+      margin: 0;
+      color: #b86722;
+      text-shadow: none;
+    }
+
+    .fever-bar {
+      border-color: #b97940;
+      background: #f3e1c7;
+      box-shadow: none;
+    }
+
+    .fever-bar .fill {
+      background: linear-gradient(90deg, #ffb34d, #f46e43);
+      box-shadow: none;
+    }
+
+    .character {
+      z-index: 14;
+      left: clamp(36px, 20%, 210px);
+      bottom: 37%;
+      width: clamp(116px, 16vw, 176px);
+      height: auto;
+      transition: transform .16s ease;
+    }
+
+    .character img {
+      display: block;
+      width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+    }
+
+    .character.success { transform: translateY(-8px) rotate(-2deg); }
+    .character.fail { transform: translateX(3px) rotate(2deg); }
+    .character.fever { animation: cheer .35s ease-in-out infinite alternate; filter: none; }
+
+    .cargo-layer {
+      z-index: 13;
+    }
+
+    .cargo {
+      width: clamp(66px, 12vw, 138px);
+      height: auto;
+      filter: drop-shadow(0 5px 5px rgba(23, 48, 79, .26));
+    }
+
+    .cargo-sprite {
+      display: block;
+      width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+    }
+
+    .cargo-sprite.variant-1 { transform: rotate(-1.5deg); }
+    .cargo-sprite.variant-2 { transform: rotate(1.5deg); }
+
+    .phone.fever-mode .cargo {
+      filter: drop-shadow(0 0 7px rgba(255, 179, 77, .72)) drop-shadow(0 5px 5px rgba(23, 48, 79, .24));
+    }
+
+    .phone.fever-mode .cargo .cargo-sprite {
+      filter: saturate(1.12) brightness(1.07);
+    }
+
+    .phone.fever-mode .belt {
+      border: 0;
+      background: transparent;
+    }
+
+    .controls {
+      z-index: 30;
+      left: 5%;
+      right: 5%;
+      bottom: 4%;
+      grid-template-columns: 1fr 1fr;
+      gap: min(10%, 100px);
+    }
+
+    .controls button {
+      min-height: 114px;
+      height: clamp(114px, 18vh, 150px);
+      display: grid;
+      grid-template-columns: minmax(72px, 34%) 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px 8px 10px;
+      border: 4px solid currentColor;
+      border-radius: 16px;
+      font-size: inherit;
+      line-height: 1;
+      text-align: left;
+      text-shadow: none;
+      box-shadow: 0 5px 0 rgba(23, 48, 79, .25);
+      transition: transform .08s ease, filter .08s ease;
+    }
+
+    .controls button img {
+      width: min(100%, 116px);
+      max-height: 110px;
+      margin: auto;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .controls button span {
+      display: grid;
+      gap: 7px;
+    }
+
+    .controls button b {
+      font-size: clamp(26px, 3.6vw, 44px);
+    }
+
+    .controls button small {
+      font-size: clamp(13px, 1.7vw, 18px);
+      font-weight: 900;
+      letter-spacing: .08em;
+    }
+
+    .controls .yes {
+      color: #176c42;
+      background: rgba(237, 255, 239, .97);
+    }
+
+    .controls .no {
+      color: #a63f42;
+      background: rgba(255, 241, 239, .97);
+    }
+
+    .controls button:active,
+    .controls button.pressed {
+      transform: translateY(4px) scale(.985);
+      box-shadow: 0 1px 0 rgba(23, 48, 79, .22);
+    }
+
+    .phone.fever-mode button {
+      border-color: #e59c32;
+      filter: saturate(1.08);
+      animation: none;
+    }
+
+    .tune-toggle {
+      z-index: 70;
+      top: 108px;
+      right: 14px;
+      width: 42px;
+      height: 42px;
+      border: 2px solid #395a7d;
+      border-radius: 10px;
+      color: #2d4a6b;
+      font-size: 22px;
+      text-shadow: none;
+      background: #fffaf0;
+      box-shadow: 0 3px 0 rgba(45, 74, 107, .2);
+    }
+
+    .tune-panel {
+      top: 158px;
+      right: 14px;
+      border: 3px solid #526f8d;
+      border-radius: 14px;
+      color: var(--ink);
+      background: #fffaf0;
+      box-shadow: 0 8px 0 rgba(45, 74, 107, .22);
+    }
+
+    .tune-panel h2,
+    .tune-row { color: var(--ink); }
+
+    .tune-value { background: #2f81b8; }
+
+    .feedback {
+      z-index: 50;
+      top: 49%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 12px;
+      color: #17304f;
+      font-size: clamp(28px, 4vw, 50px);
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: none;
+      background: rgba(255, 250, 240, .92);
+    }
+
+    .feedback img {
+      width: clamp(38px, 5vw, 56px);
+      height: clamp(38px, 5vw, 56px);
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .feedback[data-kind="error"] { color: #aa3f46; }
+    .feedback[data-kind="fever"] { color: #a95d1c; }
+
+    .fever-badge {
+      z-index: 44;
+      top: 20%;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 13px;
+      border: 3px solid #b97940;
+      border-radius: 12px;
+      color: #7b451e;
+      font-size: clamp(17px, 2.2vw, 26px);
+      font-weight: 900;
+      text-shadow: none;
+      background: #fff4cf;
+      box-shadow: 0 4px 0 rgba(122, 77, 31, .2);
+    }
+
+    .fever-badge img {
+      width: 31px;
+      height: 31px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .phone.fever-mode .fever-badge {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+      animation: none;
+    }
+
+    .particles { z-index: 45; }
+
+    .particle {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      animation: burst .55s ease-out forwards;
+    }
+
+    .overlay {
+      color: var(--ink);
+      background: rgba(227, 242, 250, .77);
+      backdrop-filter: none;
+    }
+
+    .panel {
+      border: 3px solid #395a7d;
+      border-radius: 16px;
+      color: var(--ink);
+      background: #fffaf0;
+      box-shadow: 0 8px 0 rgba(45, 74, 107, .24);
+    }
+
+    .panel h1 { text-shadow: none; }
+
+    .start {
+      border: 3px solid #a96721;
+      color: #683a16;
+      text-shadow: none;
+      background: #ffc85a;
+      box-shadow: 0 4px 0 rgba(125, 78, 28, .24);
+    }
+
+    .phone.fever-mode .warehouse::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: rgba(255, 190, 79, .12);
+    }
+
+    .phone.fever-mode {
+      animation: none;
+      filter: none;
+    }
+
+    @media (max-width: 680px), (max-height: 680px) {
+      body { padding: 0; }
+      .phone { width: 100vw; height: 100vh; min-height: 560px; border-width: 0; border-radius: 0; }
+      .hud { width: calc(100% - 56px); top: 8px; gap: 6px; }
+      .meter-card, .score { min-height: 58px; padding: 7px 9px; border-width: 2px; border-radius: 10px; }
+      .meter-label { font-size: 10px; }
+      .score strong, .meter-heading strong { font-size: 19px; }
+      .bar { height: 10px; }
+      .fever-row { grid-template-columns: 31px 1fr; }
+      .hud-flame { width: 28px; height: 28px; }
+      .character { left: 5%; bottom: 30%; width: min(27vw, 132px); }
+      .controls { left: 3%; right: 3%; gap: 4%; bottom: 2%; }
+      .controls button { min-height: 92px; height: 17vh; grid-template-columns: 42% 1fr; gap: 3px; padding: 5px; border-width: 3px; border-radius: 12px; }
+      .controls button img { max-height: 80px; }
+      .controls button b { font-size: clamp(20px, 6vw, 30px); }
+      .controls button small { font-size: 11px; }
+      .tune-toggle { top: 82px; right: 7px; width: 34px; height: 34px; font-size: 18px; }
+      .tune-panel { top: 124px; right: 7px; }
+      .fever-badge { top: 18%; font-size: 15px; }
+    }
   </style>
 </head>
 <body>
   <main class="phone" id="game">
     <section class="warehouse" aria-hidden="true">
-      <div class="back-door"></div>
-      <div class="shelf left"><i class="mini-box"></i><i class="mini-box"></i><i class="mini-box"></i></div>
-      <div class="shelf right"><i class="mini-box"></i><i class="mini-box"></i><i class="mini-box"></i></div>
+      <div class="warehouse-scene"></div>
       <div class="belt"><div class="belt-lines"></div></div>
     </section>
 
     <section class="hud" aria-label="遊戲狀態">
-      <div class="score" id="score">SCORE: 0</div>
-      <div>
-        <div class="meter-label">TIME</div>
+      <div class="score meter-card"><span class="meter-label">SCORE</span><strong id="score">0</strong></div>
+      <div class="meter-card time-card">
+        <div class="meter-heading"><span class="meter-label">TIME</span><strong id="timeValue">45</strong></div>
         <div class="bar"><div class="fill" id="timeFill"></div></div>
       </div>
-      <div class="fever-row">
-        <div class="flame">火</div>
+      <div class="fever-row meter-card">
+        <img class="hud-flame" src="assets/effects/fx-fever-start.png" alt="">
         <div class="fever-wrap">
-          <div class="meter-label">FEVER</div>
+          <div class="meter-heading"><span class="meter-label">FEVER</span><strong id="feverValue">0 / 12</strong></div>
           <div class="bar fever-bar"><div class="fill" id="feverFill"></div></div>
         </div>
       </div>
     </section>
 
     <div class="character" id="character" aria-hidden="true">
-      <div class="arm left"></div>
-      <div class="arm right"></div>
-      <div class="leg left"></div>
-      <div class="leg right"></div>
-      <div class="body"></div>
-      <div class="head">
-        <div class="hair"></div>
-        <div class="eye left"></div>
-        <div class="eye right"></div>
-        <div class="mouth"></div>
-      </div>
-      <div class="cap"></div>
+      <img id="characterSprite" src="assets/character/sorter-idle.png" alt="">
     </div>
 
     <section class="cargo-layer" id="cargoLayer" aria-label="輸送帶貨物"></section>
-    <div class="fever-badge" id="feverBadge">FEVER TIME</div>
+    <div class="fever-badge"><img src="assets/effects/fx-fever-start.png" alt=""><span id="feverBadge">FEVER TIME</span></div>
     <div class="particles" id="particles"></div>
-    <div class="feedback" id="feedback"></div>
+    <div class="feedback" id="feedback"><img id="feedbackIcon" src="assets/effects/fx-success.png" alt=""><span id="feedbackText"></span></div>
 
     <section class="controls" aria-label="分揀操作">
-      <button class="yes" id="yesBtn" aria-label="好貨">✓</button>
-      <button class="no" id="noBtn" aria-label="壞貨">×</button>
+      <button class="yes" id="yesBtn" aria-label="收件，鍵盤 A 或左方向鍵">
+        <img src="assets/targets/target-accept.png" alt=""><span><b>收件</b><small>A / ←</small></span>
+      </button>
+      <button class="no" id="noBtn" aria-label="退貨，鍵盤 D 或右方向鍵">
+        <img src="assets/targets/target-return.png" alt=""><span><b>退貨</b><small>D / →</small></span>
+      </button>
     </section>
 
     <button class="tune-toggle" id="tuneToggle" aria-label="調整參數">⚙</button>
@@ -841,7 +1278,7 @@
     <section class="overlay" id="overlay">
       <div class="panel">
         <h1>快遞分揀王</h1>
-        <p id="overlayText">綠色完整貨物按勾，紅色破損貨物按叉。連續正確集滿 Fever，狂熱時左右都算正確。</p>
+        <p id="overlayText">完整包裹送往收件區，破損包裹送往退貨區。連續正確集滿 Fever，狂熱時左右都算正確。</p>
         <button class="start" id="startBtn">開始分揀</button>
       </div>
     </section>
@@ -852,11 +1289,16 @@
     const cargoLayer = document.getElementById("cargoLayer");
     const particles = document.getElementById("particles");
     const scoreEl = document.getElementById("score");
+    const timeValue = document.getElementById("timeValue");
     const timeFill = document.getElementById("timeFill");
     const feverFill = document.getElementById("feverFill");
+    const feverValue = document.getElementById("feverValue");
     const feverBadge = document.getElementById("feverBadge");
     const feedback = document.getElementById("feedback");
+    const feedbackIcon = document.getElementById("feedbackIcon");
+    const feedbackText = document.getElementById("feedbackText");
     const character = document.getElementById("character");
+    const characterSprite = document.getElementById("characterSprite");
     const overlay = document.getElementById("overlay");
     const overlayText = document.getElementById("overlayText");
     const startBtn = document.getElementById("startBtn");
@@ -884,11 +1326,11 @@
       feverMistakePenalty: 2
     };
     const track = [
-      { top: 28, scale: .34, z: 1 },
-      { top: 36, scale: .48, z: 2 },
-      { top: 47, scale: .68, z: 3 },
-      { top: 61, scale: .95, z: 4 },
-      { top: 72, scale: 1.42, z: 5 }
+      { top: 24, scale: .34, z: 1 },
+      { top: 31, scale: .48, z: 2 },
+      { top: 39, scale: .68, z: 3 },
+      { top: 47, scale: .9, z: 4 },
+      { top: 56, scale: 1.15, z: 5 }
     ];
 
     let score = 0;
@@ -901,19 +1343,14 @@
     let audioCtx;
 
     function cargoTemplate(item) {
-      const variant = item.variant % 3;
-      const tape = variant === 0
-        ? '<i class="tape-v"></i><i class="tape-h"></i>'
-        : variant === 1
-          ? '<i class="tape-v" style="left:38%"></i><i class="tape-h" style="top:25px"></i>'
-          : '<i class="tape-h" style="top:19px"></i><i class="tape-v" style="left:62%"></i>';
-
-      return `
-        <div class="box-top"></div>
-        <div class="box-front">
-          ${tape}
-          ${item.type === "bad" ? '<i class="crack"></i>' : '<i class="label"></i>'}
-        </div>`;
+      const isFever = feverTime > 0;
+      const source = isFever
+        ? "assets/package/package-fever.png"
+        : item.type === "bad"
+          ? "assets/package/package-damaged.png"
+          : "assets/package/package-normal.png";
+      const description = isFever ? "Fever 包裹" : item.type === "bad" ? "破損包裹" : "完整包裹";
+      return `<img class="cargo-sprite variant-${item.variant % 3}" src="${source}" alt="${description}">`;
     }
 
     function makeCargo() {
@@ -954,12 +1391,17 @@
     }
 
     function updateHud() {
-      scoreEl.textContent = `SCORE: ${score}`;
+      scoreEl.textContent = score.toString().padStart(5, "0");
+      timeValue.textContent = Math.max(0, Math.ceil(timeLeft)).toString().padStart(2, "0");
+      feverValue.textContent = feverTime > 0
+        ? `${Math.ceil(feverTime)}s`
+        : `${Math.min(fever, config.feverNeed)} / ${config.feverNeed}`;
       timeFill.style.transform = `scaleX(${Math.max(0, timeLeft / config.totalTime)})`;
       feverFill.style.transform = `scaleX(${Math.max(0, Math.min(1, fever / config.feverNeed))})`;
       game.classList.toggle("fever-mode", feverTime > 0);
       character.classList.toggle("fever", feverTime > 0);
       feverBadge.textContent = feverTime > 0 ? `FEVER TIME ${Math.ceil(feverTime)}` : "FEVER TIME";
+      updateCharacterSprite();
     }
 
     function loop(now) {
@@ -973,6 +1415,7 @@
           feverTime = 0;
           fever = 0;
           setCharacter("");
+          renderCargo();
         }
       }
       updateHud();
@@ -997,22 +1440,22 @@
         if (fever >= config.feverNeed && feverTime <= 0) {
           feverTime = config.feverDuration;
           fever = config.feverNeed;
-          showFeedback("FEVER TIME!", "#d75bff");
-          burst("#d75bff", "#fff16a");
+          showFeedback("FEVER TIME!", "fever");
+          burst("fever");
           tone(660, .12, "sawtooth");
         } else {
-          showFeedback(isFever ? `PURPLE +${gain}` : `+${gain}`, isFever ? "#d75bff" : "#6aff46");
+          showFeedback(`+${gain}`, "success");
           tone(520, .08, "triangle");
         }
         setCharacter("success");
-        burst(isFever ? "#d75bff" : "#fff06b", isFever ? "#36d6ff" : "#49d93b");
+        burst(isFever ? "fever" : "success");
       } else {
         timeLeft = Math.max(0, timeLeft - config.mistakePenalty);
         fever = Math.max(0, fever - config.feverMistakePenalty);
-        showFeedback("-TIME", "#ff4f57");
+        showFeedback(`-${config.mistakePenalty}s`, "error");
         setCharacter("fail");
         shake();
-        burst("#ff6262", "#ffffff");
+        burst("error");
         tone(150, .13, "square");
       }
 
@@ -1027,32 +1470,47 @@
     function setCharacter(state) {
       character.classList.remove("success", "fail");
       if (state) character.classList.add(state);
+      updateCharacterSprite();
       window.clearTimeout(setCharacter.timer);
       setCharacter.timer = window.setTimeout(() => {
         character.classList.remove("success", "fail");
+        updateCharacterSprite();
       }, 380);
     }
 
-    function showFeedback(text, color) {
-      feedback.textContent = text;
-      feedback.style.color = color;
+    function updateCharacterSprite() {
+      const state = character.classList.contains("fail")
+        ? "worried"
+        : (character.classList.contains("success") || feverTime > 0 ? "cheer" : "idle");
+      if (characterSprite.dataset.state !== state) {
+        characterSprite.src = `assets/character/sorter-${state}.png`;
+        characterSprite.dataset.state = state;
+      }
+    }
+
+    function showFeedback(text, kind) {
+      feedbackText.textContent = text;
+      feedback.dataset.kind = kind;
+      feedbackIcon.src = `assets/effects/fx-${kind === "fever" ? "fever-start" : kind}.png`;
       feedback.classList.remove("show");
       void feedback.offsetWidth;
       feedback.classList.add("show");
     }
 
-    function burst(a, b) {
+    function burst(kind) {
       const rect = game.getBoundingClientRect();
       const originX = rect.width / 2;
       const originY = rect.height * .6;
-      for (let i = 0; i < 18; i += 1) {
-        const p = document.createElement("i");
+      const asset = kind === "fever" ? "fx-fever-start.png" : `fx-${kind}.png`;
+      for (let i = 0; i < 7; i += 1) {
+        const p = document.createElement("img");
         const angle = Math.random() * Math.PI * 2;
         const distance = 42 + Math.random() * 75;
         p.className = "particle";
+        p.src = `assets/effects/${asset}`;
+        p.alt = "";
         p.style.left = `${originX}px`;
         p.style.top = `${originY}px`;
-        p.style.background = i % 2 ? a : b;
         p.style.setProperty("--x", `${Math.cos(angle) * distance}px`);
         p.style.setProperty("--y", `${Math.sin(angle) * distance}px`);
         particles.appendChild(p);
