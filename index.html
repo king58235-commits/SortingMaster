@@ -681,7 +681,7 @@
     @keyframes burst {
       to {
         opacity: 0;
-        transform: translate(var(--x), var(--y)) scale(.2);
+        transform: translate(var(--x), var(--y)) rotate(var(--r, 0deg)) scale(.2);
       }
     }
 
@@ -791,7 +791,8 @@
     }
 
     .warehouse,
-    .warehouse-scene {
+    .warehouse-scene,
+    .warehouse-fever-scene {
       position: absolute;
       inset: 0;
     }
@@ -805,6 +806,33 @@
       background: center / cover no-repeat url("assets/background/warehouse-main.png");
     }
 
+    .warehouse-fever-scene {
+      z-index: 1;
+      opacity: 0;
+      background: center / cover no-repeat url("assets/background/warehouse-fever.png");
+      transition: opacity .32s ease-out;
+    }
+
+    .phone.fever-mode .warehouse-fever-scene {
+      opacity: 1;
+    }
+
+    .warehouse-scene::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 15% 36%, rgba(255, 194, 79, .22), transparent 9%),
+        radial-gradient(circle at 85% 36%, rgba(255, 194, 79, .18), transparent 9%);
+      opacity: .45;
+      animation: warehouseLights 3.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes warehouseLights {
+      to { opacity: .78; }
+    }
+
     .back-door,
     .shelf,
     .mini-box {
@@ -812,20 +840,28 @@
     }
 
     .belt {
-      left: 40%;
-      right: 40%;
+      z-index: 2;
+      left: 37%;
+      right: 37%;
       top: 17%;
-      bottom: 11%;
-      clip-path: none;
-      overflow: visible;
+      bottom: 30%;
+      clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+      overflow: hidden;
       border: 0;
       background: transparent;
+      opacity: .34;
+      pointer-events: none;
     }
 
     .belt::before,
-    .belt::after,
-    .belt-lines {
+    .belt::after {
       display: none;
+    }
+
+    .belt-lines {
+      display: block;
+      background: repeating-linear-gradient(0deg, transparent 0 49px, rgba(206, 229, 244, .34) 49px 53px);
+      animation: beltMove .66s linear infinite;
     }
 
     .hud {
@@ -933,7 +969,7 @@
       z-index: 14;
       left: clamp(36px, 20%, 210px);
       bottom: 37%;
-      width: clamp(116px, 16vw, 176px);
+      width: clamp(124px, 17vw, 188px);
       height: auto;
       transition: transform .16s ease;
     }
@@ -969,6 +1005,13 @@
     .cargo-sprite.variant-1 { transform: rotate(-1.5deg); }
     .cargo-sprite.variant-2 { transform: rotate(1.5deg); }
 
+    .cargo-flight {
+      position: absolute;
+      z-index: 46;
+      pointer-events: none;
+      filter: drop-shadow(0 5px 5px rgba(23, 48, 79, .24));
+    }
+
     .phone.fever-mode .cargo {
       filter: drop-shadow(0 0 7px rgba(255, 179, 77, .72)) drop-shadow(0 5px 5px rgba(23, 48, 79, .24));
     }
@@ -992,8 +1035,8 @@
     }
 
     .controls button {
-      min-height: 114px;
-      height: clamp(114px, 18vh, 150px);
+      min-height: 104px;
+      height: clamp(104px, 16vh, 134px);
       display: grid;
       grid-template-columns: minmax(72px, 34%) 1fr;
       align-items: center;
@@ -1048,6 +1091,14 @@
       box-shadow: 0 1px 0 rgba(23, 48, 79, .22);
     }
 
+    .controls button.route-hit {
+      animation: routeHit .28s ease-out;
+    }
+
+    @keyframes routeHit {
+      50% { transform: translateY(-3px) scale(1.025); filter: brightness(1.08); }
+    }
+
     .phone.fever-mode button {
       border-color: #e59c32;
       filter: saturate(1.08);
@@ -1069,6 +1120,26 @@
       box-shadow: 0 3px 0 rgba(45, 74, 107, .2);
     }
 
+    .audio-toggle {
+      position: absolute;
+      z-index: 70;
+      top: 108px;
+      right: 64px;
+      width: 42px;
+      height: 42px;
+      border: 2px solid #395a7d;
+      border-radius: 10px;
+      color: #2d4a6b;
+      font-size: 20px;
+      background: #fffaf0;
+      box-shadow: 0 3px 0 rgba(45, 74, 107, .2);
+    }
+
+    .audio-toggle:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 rgba(45, 74, 107, .2);
+    }
+
     .tune-panel {
       top: 158px;
       right: 14px;
@@ -1086,14 +1157,14 @@
 
     .feedback {
       z-index: 50;
-      top: 49%;
+      top: 47%;
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 6px 10px;
       border-radius: 12px;
       color: #17304f;
-      font-size: clamp(28px, 4vw, 50px);
+      font-size: clamp(26px, 3.5vw, 44px);
       font-weight: 900;
       line-height: 1;
       text-shadow: none;
@@ -1144,11 +1215,40 @@
     .particles { z-index: 45; }
 
     .particle {
-      width: 34px;
-      height: 34px;
+      width: var(--particle-size, 28px);
+      height: var(--particle-size, 28px);
       object-fit: contain;
       image-rendering: pixelated;
       animation: burst .55s ease-out forwards;
+    }
+
+    .fever-ember {
+      position: absolute;
+      z-index: 1;
+      width: var(--ember-size, 24px);
+      height: var(--ember-size, 24px);
+      object-fit: contain;
+      image-rendering: pixelated;
+      pointer-events: none;
+      filter:
+        brightness(1.28)
+        saturate(1.16)
+        drop-shadow(0 0 3px rgba(255, 244, 179, .96))
+        drop-shadow(0 0 12px rgba(255, 105, 24, .94));
+      animation: emberRise var(--ember-duration, 1.2s) ease-out forwards;
+    }
+
+    @keyframes emberRise {
+      0% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg) scale(.82);
+      }
+      12% { opacity: 1; }
+      52% { opacity: .92; }
+      100% {
+        opacity: 0;
+        transform: translate(var(--ember-drift, 0), var(--ember-rise, -420px)) rotate(var(--ember-rotate, 90deg)) scale(.34);
+      }
     }
 
     .overlay {
@@ -1180,7 +1280,14 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      background: rgba(255, 190, 79, .12);
+      background:
+        linear-gradient(90deg, rgba(255, 176, 54, .14), transparent 16%, transparent 84%, rgba(255, 176, 54, .14)),
+        rgba(255, 190, 79, .08);
+      animation: feverEdge .48s ease-in-out infinite alternate;
+    }
+
+    @keyframes feverEdge {
+      to { opacity: .62; }
     }
 
     .phone.fever-mode {
@@ -1205,8 +1312,21 @@
       .controls button b { font-size: clamp(20px, 6vw, 30px); }
       .controls button small { font-size: 11px; }
       .tune-toggle { top: 82px; right: 7px; width: 34px; height: 34px; font-size: 18px; }
+      .audio-toggle { top: 82px; right: 48px; width: 34px; height: 34px; font-size: 16px; }
       .tune-panel { top: 124px; right: 7px; }
       .fever-badge { top: 18%; font-size: 15px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .warehouse-scene::after,
+      .belt-lines,
+      .character.fever,
+      .phone.fever-mode .warehouse::after {
+        animation: none;
+      }
+
+      .warehouse-fever-scene { transition: none; }
+      .fever-ember { display: none; }
     }
   </style>
 </head>
@@ -1214,6 +1334,7 @@
   <main class="phone" id="game">
     <section class="warehouse" aria-hidden="true">
       <div class="warehouse-scene"></div>
+      <div class="warehouse-fever-scene"></div>
       <div class="belt"><div class="belt-lines"></div></div>
     </section>
 
@@ -1250,6 +1371,7 @@
       </button>
     </section>
 
+    <button class="audio-toggle" id="audioToggle" type="button" aria-label="關閉音效" aria-pressed="false">🔊</button>
     <button class="tune-toggle" id="tuneToggle" aria-label="調整參數">⚙</button>
     <section class="tune-panel" id="tunePanel" aria-label="調整參數">
       <h2>調整參數</h2>
@@ -1304,6 +1426,7 @@
     const startBtn = document.getElementById("startBtn");
     const yesBtn = document.getElementById("yesBtn");
     const noBtn = document.getElementById("noBtn");
+    const audioToggle = document.getElementById("audioToggle");
     const tuneToggle = document.getElementById("tuneToggle");
     const tunePanel = document.getElementById("tunePanel");
     const feverNeedInput = document.getElementById("feverNeedInput");
@@ -1340,7 +1463,32 @@
     let queue = [];
     let running = false;
     let lastTick = 0;
-    let audioCtx;
+    let lastWarningSecond = null;
+    let lastEmberAt = 0;
+    let muted = false;
+
+    const soundPaths = {
+      click: "assets/audio/ui-click.wav",
+      success: "assets/audio/sort-success.wav",
+      error: "assets/audio/sort-error.wav",
+      feverStart: "assets/audio/fever-start.wav",
+      feverEnd: "assets/audio/fever-end.wav",
+      warning: "assets/audio/time-warning.wav",
+      result: "assets/audio/result.wav"
+    };
+    const soundBank = Object.fromEntries(Object.entries(soundPaths).map(([name, source]) => {
+      const audio = new Audio(source);
+      audio.preload = "auto";
+      return [name, audio];
+    }));
+    const loopSounds = {
+      belt: new Audio("assets/audio/belt-loop.wav"),
+      fever: new Audio("assets/audio/fever-loop.wav")
+    };
+    loopSounds.belt.loop = true;
+    loopSounds.belt.volume = .11;
+    loopSounds.fever.loop = true;
+    loopSounds.fever.volume = .14;
 
     function cargoTemplate(item) {
       const isFever = feverTime > 0;
@@ -1370,7 +1518,13 @@
       queue = Array.from({ length: 5 }, makeCargo);
       running = true;
       lastTick = performance.now();
+      lastWarningSecond = null;
+      lastEmberAt = 0;
+      particles.replaceChildren();
       overlay.classList.add("hidden");
+      stopLoop("fever");
+      startLoop("belt");
+      playSound("click", .5);
       updateHud();
       renderCargo();
       requestAnimationFrame(loop);
@@ -1410,13 +1564,22 @@
       lastTick = now;
       timeLeft -= delta;
       if (feverTime > 0) {
+        emitFeverEmber(now);
         feverTime -= delta;
         if (feverTime <= 0) {
           feverTime = 0;
           fever = 0;
+          stopLoop("fever");
+          loopSounds.belt.playbackRate = 1;
+          playSound("feverEnd", .75);
           setCharacter("");
           renderCargo();
         }
+      }
+      const warningSecond = Math.ceil(timeLeft);
+      if (warningSecond <= 5 && warningSecond > 0 && warningSecond !== lastWarningSecond) {
+        lastWarningSecond = warningSecond;
+        playSound("warning", warningSecond <= 2 ? .82 : .62, warningSecond <= 2 ? 1.08 : 1);
       }
       updateHud();
       if (timeLeft <= 0) {
@@ -1432,6 +1595,7 @@
       const target = queue[queue.length - 1];
       const isFever = feverTime > 0;
       const correct = isFever || target.type === answer;
+      animateCargo(answer, correct, button);
 
       if (correct) {
         const gain = isFever ? config.feverScore : config.normalScore;
@@ -1440,12 +1604,14 @@
         if (fever >= config.feverNeed && feverTime <= 0) {
           feverTime = config.feverDuration;
           fever = config.feverNeed;
-          showFeedback("FEVER TIME!", "fever");
+          showFeedback(`+${gain}`, "success");
           burst("fever");
-          tone(660, .12, "sawtooth");
+          playSound("feverStart", .85);
+          startLoop("fever");
+          loopSounds.belt.playbackRate = 1.14;
         } else {
           showFeedback(`+${gain}`, "success");
-          tone(520, .08, "triangle");
+          playSound("success", isFever ? .72 : .62, isFever ? 1.12 : 1);
         }
         setCharacter("success");
         burst(isFever ? "fever" : "success");
@@ -1456,7 +1622,7 @@
         setCharacter("fail");
         shake();
         burst("error");
-        tone(150, .13, "square");
+        playSound("error", .38);
       }
 
       if (correct) {
@@ -1513,9 +1679,79 @@
         p.style.top = `${originY}px`;
         p.style.setProperty("--x", `${Math.cos(angle) * distance}px`);
         p.style.setProperty("--y", `${Math.sin(angle) * distance}px`);
+        p.style.setProperty("--r", `${Math.round(Math.random() * 160 - 80)}deg`);
+        p.style.setProperty("--particle-size", `${18 + Math.round(Math.random() * 20)}px`);
         particles.appendChild(p);
         p.addEventListener("animationend", () => p.remove(), { once: true });
       }
+    }
+
+    function emitFeverEmber(now) {
+      if (now - lastEmberAt < 55) return;
+      lastEmberAt = now;
+
+      const amount = Math.random() < .28 ? 3 : 2;
+      for (let i = 0; i < amount; i += 1) {
+        if (particles.querySelectorAll(".fever-ember").length >= 64) return;
+
+        const ember = document.createElement("img");
+        const side = Math.random();
+        const left = side < .42
+          ? 1 + Math.random() * 27
+          : side > .58
+            ? 72 + Math.random() * 27
+            : 31 + Math.random() * 38;
+        const size = 22 + Math.random() * 24;
+
+        ember.className = "fever-ember";
+        ember.src = "assets/effects/fx-fever-ember.png";
+        ember.alt = "";
+        ember.style.left = `${left}%`;
+        ember.style.bottom = `${-8 + Math.random() * 30}px`;
+        ember.style.setProperty("--ember-size", `${size}px`);
+        ember.style.setProperty("--ember-drift", `${Math.round(Math.random() * 110 - 55)}px`);
+        ember.style.setProperty("--ember-rise", `${Math.round(-(game.clientHeight * (.48 + Math.random() * .42)))}px`);
+        ember.style.setProperty("--ember-rotate", `${Math.round(Math.random() * 220 - 110)}deg`);
+        ember.style.setProperty("--ember-duration", `${(1.15 + Math.random() * .9).toFixed(2)}s`);
+        particles.appendChild(ember);
+        ember.addEventListener("animationend", () => ember.remove(), { once: true });
+      }
+    }
+
+    function animateCargo(answer, correct, button) {
+      const activeCargo = cargoLayer.lastElementChild;
+      if (!activeCargo) return;
+      const direction = answer === "good" ? -1 : 1;
+      button.classList.remove("route-hit");
+      void button.offsetWidth;
+      button.classList.add("route-hit");
+      window.setTimeout(() => button.classList.remove("route-hit"), 300);
+
+      if (!correct) {
+        const sprite = activeCargo.querySelector(".cargo-sprite");
+        sprite?.animate([
+          { transform: "translateX(0) rotate(0deg)", filter: "brightness(1)" },
+          { transform: `translateX(${direction * 54}px) rotate(${direction * 5}deg)`, filter: "brightness(.88) saturate(1.25)" },
+          { transform: "translateX(0) rotate(0deg)", filter: "brightness(1)" }
+        ], { duration: 260, easing: "ease-out" });
+        return;
+      }
+
+      const gameRect = game.getBoundingClientRect();
+      const cargoRect = activeCargo.getBoundingClientRect();
+      const ghost = activeCargo.cloneNode(true);
+      ghost.className = "cargo-flight";
+      ghost.style.left = `${cargoRect.left - gameRect.left}px`;
+      ghost.style.top = `${cargoRect.top - gameRect.top}px`;
+      ghost.style.width = `${cargoRect.width}px`;
+      ghost.style.height = `${cargoRect.height}px`;
+      game.appendChild(ghost);
+      const flight = ghost.animate([
+        { transform: "translate(0, 0) scale(1)", opacity: 1 },
+        { transform: `translate(${direction * gameRect.width * .13}px, ${gameRect.height * .08}px) scale(.92)`, opacity: 1, offset: .55 },
+        { transform: `translate(${direction * gameRect.width * .29}px, ${gameRect.height * .2}px) scale(.62)`, opacity: 0 }
+      ], { duration: feverTime > 0 ? 240 : 330, easing: "cubic-bezier(.22,.75,.35,1)" });
+      flight.finished.finally(() => ghost.remove());
     }
 
     function shake() {
@@ -1530,27 +1766,52 @@
     function press(button) {
       button.classList.add("pressed");
       window.setTimeout(() => button.classList.remove("pressed"), 120);
+      playSound("click", .28);
     }
 
-    function tone(freq, duration, type) {
-      try {
-        audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(.09, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-      } catch (_) {}
+    function playSound(name, volume = .7, playbackRate = 1) {
+      if (muted || !soundBank[name]) return;
+      const sound = soundBank[name].cloneNode();
+      sound.volume = volume;
+      sound.playbackRate = playbackRate;
+      sound.play().catch(() => {});
+    }
+
+    function startLoop(name) {
+      const sound = loopSounds[name];
+      if (!sound || muted) return;
+      sound.play().catch(() => {});
+    }
+
+    function stopLoop(name) {
+      const sound = loopSounds[name];
+      if (!sound) return;
+      sound.pause();
+      sound.currentTime = 0;
+    }
+
+    function toggleAudio() {
+      muted = !muted;
+      audioToggle.textContent = muted ? "🔇" : "🔊";
+      audioToggle.setAttribute("aria-label", muted ? "開啟音效" : "關閉音效");
+      audioToggle.setAttribute("aria-pressed", String(muted));
+      if (muted) {
+        stopLoop("belt");
+        stopLoop("fever");
+      } else if (running) {
+        startLoop("belt");
+        if (feverTime > 0) startLoop("fever");
+        playSound("click", .4);
+      }
     }
 
     function endGame() {
       running = false;
       timeLeft = 0;
+      stopLoop("belt");
+      stopLoop("fever");
+      loopSounds.belt.playbackRate = 1;
+      playSound("result", .72);
       updateHud();
       overlayText.textContent = `分揀完成！你的分數是 ${score}。再挑戰一次，把 Fever 接得更順。`;
       startBtn.textContent = "再玩一次";
@@ -1573,6 +1834,7 @@
     startBtn.addEventListener("click", reset);
     yesBtn.addEventListener("click", () => sortCargo("good", yesBtn));
     noBtn.addEventListener("click", () => sortCargo("bad", noBtn));
+    audioToggle.addEventListener("click", toggleAudio);
     tuneToggle.addEventListener("click", () => tunePanel.classList.toggle("open"));
     feverNeedInput.addEventListener("input", syncTuning);
     feverGainInput.addEventListener("input", syncTuning);
